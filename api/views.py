@@ -1,11 +1,10 @@
-from re import U
 from rest_framework.response import Response 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 
 from .models import FriendShip, Post, UserApp
-from .serializers import FriendShipSerializer, PostSerializer, UserBasicInfoSerializer, UserSerializer
+from .serializers import PostSerializer, UserBasicInfoSerializer, UserSerializer
 
 
 @api_view(['GET'])
@@ -23,30 +22,46 @@ def get_user(request):
      
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def get_friend_list(request):
+def get_friend_list(request, pk):
      friend_ships_list =( 
-               FriendShip.objects.all().filter(sender=request.user.id) |
-               FriendShip.objects.all().filter(reciever=request.user.id)
+               FriendShip.objects.all().filter(sender=pk) |
+               FriendShip.objects.all().filter(reciever=pk)
           )
      friend_list = []
      for friend_ship in friend_ships_list :
-          if friend_ship.sender.id == request.user.id:
-               print('true')
+          if str(friend_ship.sender.id) == pk:
                friend_list.append(friend_ship.reciever)
           else:
+               print(str(pk)+' '+str(friend_ship.sender.id))
                print('false')
+               print(str(pk)+' '+str(friend_ship.reciever.id))
+               print('true')
                friend_list.append(friend_ship.sender)
      serializer = UserBasicInfoSerializer(friend_list, many=True)
      return Response( data=serializer.data, status= status.HTTP_200_OK)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def post(request):
-     posts = Post.objects.filter(owner=request.user.id)
-     serializer = PostSerializer(posts, many=True)
-     return Response(data=serializer.data,status=status.HTTP_200_OK)
-
-
+def post(request, pk):
+     posts = Post.objects.filter(owner=pk)
+     if post :
+          if str(request.user.id) == pk:
+               serializer = PostSerializer(posts, many=True)
+               return Response(data=serializer.data,status=status.HTTP_200_OK)
+          
+          friend_ship = (
+               (FriendShip.objects.all().filter(sender=pk)
+               &FriendShip.objects.all().filter(reciever=request.user.id))|
+               (FriendShip.objects.all().filter(reciever=pk)
+               &FriendShip.objects.all().filter(sender=request.user.id))
+               )
+          
+          if (friend_ship):
+               posts = (posts.filter(only_friends=True)|posts.filter(public=True))
+          
+          serializer = PostSerializer(posts, many=True)
+          return Response(data=serializer.data,status=status.HTTP_200_OK)
+     return Response(data={},status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
