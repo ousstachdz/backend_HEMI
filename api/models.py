@@ -17,7 +17,7 @@ class FriendShip(models.Model):
         return (self.sender.username+" and "+self.reciever.username)
 
 class Post(models.Model):
-    owner = models.ForeignKey(UserApp, on_delete=models.CASCADE)
+    owner = models.ForeignKey(UserApp, on_delete=models.CASCADE, related_name='owner')
     content = models.TextField(blank=True)
     timestamp = models.DateField(auto_now_add=True)
     public = models.BooleanField(default=False)

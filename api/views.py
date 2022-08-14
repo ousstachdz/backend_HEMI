@@ -1,7 +1,9 @@
+import math
 from rest_framework.response import Response 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
+from rest_framework.pagination import PageNumberPagination 
 
 from .models import FriendShip, Post, UserApp
 from .serializers import PostSerializer, UserBasicInfoSerializer, UserSerializer
@@ -32,10 +34,6 @@ def get_friend_list(request, pk):
           if str(friend_ship.sender.id) == pk:
                friend_list.append(friend_ship.reciever)
           else:
-               print(str(pk)+' '+str(friend_ship.sender.id))
-               print('false')
-               print(str(pk)+' '+str(friend_ship.reciever.id))
-               print('true')
                friend_list.append(friend_ship.sender)
      serializer = UserBasicInfoSerializer(friend_list, many=True)
      return Response( data=serializer.data, status= status.HTTP_200_OK)
@@ -74,3 +72,30 @@ def get_user_by_id(request,pk):
      except:
           data = {'response':'out of range'}
      return Response( data=data, status= status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_post(request):
+     serializer = PostSerializer(data=request.data)
+     if serializer.is_valid():
+          serializer.save()
+          return Response(serializer.data, status=status.HTTP_201_CREATED)
+     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_all_post(request):
+     PAGE_SIZE = 10
+     paginator= PageNumberPagination()
+     paginator.page_size = PAGE_SIZE
+     post_list = Post.objects.all().order_by('timestamp')
+     num_pages = (math.floor(post_list.count()/PAGE_SIZE))+1
+     num_this_pages = int(request.GET.get('page'))
+     if num_this_pages<=num_pages:
+          post_list = paginator.paginate_queryset(post_list, request)
+          serializer = PostSerializer(post_list, many=True)
+          return Response(data={'num_this_pages':num_this_pages,'num_pages':num_pages, 'post_list':serializer.data}, status=status.HTTP_200_OK)
+     return Response(data={'message':'out of range'}, status=status.HTTP_400_BAD_REQUEST)
+
+     
