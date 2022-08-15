@@ -1,13 +1,31 @@
 import math
+from os import access
 from rest_framework.response import Response 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination 
-
+from rest_framework_simplejwt.tokens import RefreshToken
 from .models import FriendShip, Post, UserApp
-from .serializers import PostSerializer, UserBasicInfoSerializer, UserSerializer
+from .serializers import PostSerializer, UserBasicInfoSerializer, UserCreatSerializer, UserSerializer
 
+
+@api_view(['POST'])
+def signup_step_one(request):
+     password = request.data['password']
+     confirm_password = request.data['confirm_password']
+     if password == confirm_password:
+          serializer = UserCreatSerializer(data=request.data)
+          if serializer.is_valid():
+               user = serializer.save()
+               refresh = RefreshToken.for_user(user)
+               data= {
+                    'refresh': str(refresh),
+                    'access': str(refresh.access_token),
+                    }
+               return Response(data=data , status= status.HTTP_200_OK)
+     return Response( data=serializer.errors, status= status.HTTP_400_BAD_REQUEST)
+     
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated,])
