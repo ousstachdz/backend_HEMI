@@ -1,7 +1,6 @@
-from dataclasses import field
-from pyexpat import model
 from rest_framework import serializers
-from .models import FriendShip, Post, UserApp
+
+from .models import FriendShip, Message, Post, UserApp
 
 
 
@@ -62,4 +61,24 @@ class PostSerializer(serializers.ModelSerializer):
         post.owner = owner
         return post
 
-		
+
+class MessageSerializer(serializers.ModelSerializer):
+    sender = UserBasicInfoSerializer()
+    reciever = UserBasicInfoSerializer()
+
+    class Meta:
+        model = Message
+        fields = '__all__'
+
+    def create(self, validated_data):
+        
+        sender_data = validated_data.pop('sender')
+        reciever_data = validated_data.pop('reciever')
+        reciever = UserApp.objects.get(id = reciever_data)
+        sender = UserApp.objects.get(id = sender_data)
+        
+        message = Message.objects.create(**validated_data)
+        message.sender = sender
+        message.reciever = reciever
+        
+        return message

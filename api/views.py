@@ -1,13 +1,13 @@
 import math
-from os import access
 from rest_framework.response import Response 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination 
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import FriendShip, Post, UserApp
-from .serializers import PostSerializer, UserBasicInfoSerializer, UserCreatSerializer, UserSerializer
+
+from .models import  FriendShip, Message, Post, UserApp
+from .serializers import  MessageSerializer, PostSerializer, UserBasicInfoSerializer, UserCreatSerializer, UserSerializer
 
 
 @api_view(['POST'])
@@ -30,7 +30,11 @@ def signup_step_one(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated,])
 def test(request):
+     id = 1
+     userApp=UserApp.objects.get(pk=id)
+     
      print(request.user)
+     print(userApp)
      return Response( data='good', status= status.HTTP_200_OK)
 
 @api_view(['GET'])
@@ -116,4 +120,18 @@ def get_all_post(request):
           return Response(data={'num_this_pages':num_this_pages,'num_pages':num_pages, 'post_list':serializer.data}, status=status.HTTP_200_OK)
      return Response(data={'message':'out of range'}, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_conversation(request,pk):
+     print(pk)
+     print(request.user.id)
+     message = (
+          (Message.objects.all().filter(sender=pk)& Message.objects.all().filter(reciever=request.user.id))|
+          (Message.objects.all().filter(sender=request.user.id)& Message.objects.all().filter(reciever=pk))
+          )
+     
+     if (len(message)>0):
+          serializer = MessageSerializer(message,many=True)
+          return Response(data=serializer.data , status=status.HTTP_200_OK)
+     return Response(data={'message':"nomessafew"} , status=status.HTTP_200_OK)
      

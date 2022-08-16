@@ -41,3 +41,14 @@ class Image(models.Model):
 
     def __str__(self) -> str:
         return self.owner.username
+    
+    
+class Message(models.Model):
+    sender = models.ForeignKey(UserApp, on_delete=models.CASCADE, related_name='sender')
+    reciever = models.ForeignKey(UserApp, on_delete=models.CASCADE, related_name='reciever')
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)    
+    
+    def __str__(self) -> str:
+        return self.content
+    
