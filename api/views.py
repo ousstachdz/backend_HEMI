@@ -7,35 +7,12 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import  FriendShip, Message, Post, UserApp
-from .serializers import  MessageSerializer, PostSerializer, UserBasicInfoSerializer, UserCreatSerializer, UserSerializer
+from .serializers import ( 
+               MessageSerializer, PostSerializer, UserBasicInfoSerializer, 
+               UserCreatSerializer, UserSerializer
+                    )
+from api import serializers
 
-
-@api_view(['POST'])
-def signup_step_one(request):
-     password = request.data['password']
-     confirm_password = request.data['confirm_password']
-     if password == confirm_password:
-          serializer = UserCreatSerializer(data=request.data)
-          if serializer.is_valid():
-               user = serializer.save()
-               refresh = RefreshToken.for_user(user)
-               data= {
-                    'refresh': str(refresh),
-                    'access': str(refresh.access_token),
-                    }
-               return Response(data=data , status= status.HTTP_200_OK)
-     return Response( data=serializer.errors, status= status.HTTP_400_BAD_REQUEST)
-     
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated,])
-def test(request):
-     id = 1
-     userApp=UserApp.objects.get(pk=id)
-     
-     print(request.user)
-     print(userApp)
-     return Response( data='good', status= status.HTTP_200_OK)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -133,5 +110,20 @@ def get_conversation(request,pk):
      if (len(message)>0):
           serializer = MessageSerializer(message,many=True)
           return Response(data=serializer.data , status=status.HTTP_200_OK)
-     return Response(data={'message':"nomessafew"} , status=status.HTTP_200_OK)
-     
+     return Response( status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['POST'])
+def signup_step_one(request):
+     password = request.data['password']
+     confirm_password = request.data['confirm_password']
+     if password == confirm_password:
+          serializer = UserCreatSerializer(data=request.data)
+          if serializer.is_valid():
+               user = serializer.save()
+               refresh = RefreshToken.for_user(user)
+               data= {
+                    'refresh': str(refresh),
+                    'access': str(refresh.access_token),
+                    }
+               return Response(data=data , status= status.HTTP_200_OK)
+     return Response( data=serializer.errors, status= status.HTTP_400_BAD_REQUEST)
