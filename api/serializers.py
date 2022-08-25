@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import FriendShip, Message, Post, UserApp
+from .models import Conversation, FriendShip, Message, Post, UserApp
 
 
 
@@ -10,8 +10,7 @@ class UserCreatSerializer(serializers.ModelSerializer):
     class Meta:
         model=UserApp
         fields = '__all__'
-        
-        
+    
     def create(self, validated_data):
         password = validated_data.pop('password')
         username = validated_data.pop('username')
@@ -25,6 +24,7 @@ class UserCreatSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    
     class Meta:
         model = UserApp
         fields = [
@@ -34,6 +34,7 @@ class UserSerializer(serializers.ModelSerializer):
             ]  
           
 class UserBasicInfoSerializer(serializers.ModelSerializer):
+    
     class Meta:
         model = UserApp
         fields = [
@@ -43,13 +44,14 @@ class UserBasicInfoSerializer(serializers.ModelSerializer):
         
         
 class FriendShipSerializer(serializers.ModelSerializer):
+    
     class Meta:
         model = FriendShip
         fields = '__all__'
         
 class PostSerializer(serializers.ModelSerializer):
-    # owner = serializers.PrimaryKeyRelatedField(queryset = UserApp.objects.all())
     owner = UserBasicInfoSerializer()
+    
     class Meta:
         model= Post
         fields = '__all__'
@@ -62,23 +64,28 @@ class PostSerializer(serializers.ModelSerializer):
         return post
 
 
-class MessageSerializer(serializers.ModelSerializer):
+class ConversationSerializer(serializers.ModelSerializer):
     sender = UserBasicInfoSerializer()
     reciever = UserBasicInfoSerializer()
 
     class Meta:
-        model = Message
+        model = Conversation
         fields = '__all__'
 
     def create(self, validated_data):
-        
         sender_data = validated_data.pop('sender')
         reciever_data = validated_data.pop('reciever')
-        reciever = UserApp.objects.get(id = reciever_data)
         sender = UserApp.objects.get(id = sender_data)
-        
-        message = Message.objects.create(**validated_data)
-        message.sender = sender
-        message.reciever = reciever
-        
-        return message
+        reciever = UserApp.objects.get(id = reciever_data)
+        conversation = Conversation.objects.create(**validated_data)
+        conversation.reciever = reciever
+        conversation.sender = sender
+        return conversation
+
+    
+class MessageSerializer(serializers.ModelSerializer):
+    conversation = ConversationSerializer()
+
+    class Meta:
+        model = Message
+        fields = '__all__'

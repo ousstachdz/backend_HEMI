@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 from django.contrib.auth.models import AbstractUser
 
 class UserApp(AbstractUser):
@@ -7,14 +8,26 @@ class UserApp(AbstractUser):
     cover_img = models.ImageField(upload_to='./static/cover',null=True, blank=True)
 
 
+class FriendShipManager(models.Manager):
+    
+    def get_for(self, user_,user__):
+        friend_ship = (
+            Q(Q(sender=user_)&Q(reciever=user__))|
+            Q(Q(reciever=user_)&Q(sender=user__))
+            )
+        return super().get_queryset().filter(friend_ship)
+    
+    
 class FriendShip(models.Model):
     sender = models.ForeignKey(UserApp, on_delete=models.CASCADE,related_name='+')
     reciever = models.ForeignKey(UserApp, on_delete=models.CASCADE)
     is_accepted = models.BooleanField(default=False)
     timestamp = models.DateField(auto_now_add=True)
+    objects = FriendShipManager()
     
     def __str__(self):
         return (self.sender.username+" and "+self.reciever.username)
+
 
 class Post(models.Model):
     owner = models.ForeignKey(UserApp, on_delete=models.CASCADE, related_name='owner')
@@ -25,13 +38,12 @@ class Post(models.Model):
     private = models.BooleanField(default=False)
     has_image = models.BooleanField(default=False)
     has_multi_images = models.BooleanField(default=False)
-
+    
     def __str__(self):
         return self.content
     
 
 class Image(models.Model):
-    
     is_profile = models.BooleanField(default=False)
     is_cover = models.BooleanField(default=True)
     is_post = models.BooleanField(default=False)
@@ -43,11 +55,37 @@ class Image(models.Model):
         return self.owner.username
     
     
-class Message(models.Model):
-    sender = models.ForeignKey(UserApp, on_delete=models.CASCADE, related_name='sender')
+class ConversationManager(models.Manager):
+    
+    def get_for(self, user_,user__):
+        friend_ship = (
+            Q(Q(sender=user_)&Q(reciever=user__))|
+            Q(Q(reciever=user_)&Q(sender=user__))
+            )
+        return super().get_queryset().filter(friend_ship) 
+
+
+class Conversation(models.Model):
     reciever = models.ForeignKey(UserApp, on_delete=models.CASCADE, related_name='reciever')
+    sender = models.ForeignKey(UserApp, on_delete=models.CASCADE, related_name='sender')
+    objects= ConversationManager()
+    
+    
+class MessageManager(models.Manager):
+    
+    def get_for(self, user_,user__):
+        friend_ship = (
+            Q(Q(conversation__sender=user_)&Q(conversation__reciever=user__))|
+            Q(Q(conversation__reciever=user_)&Q(conversation__sender=user__))
+            )
+        return super().get_queryset().filter(friend_ship) 
+    
+    
+class Message(models.Model):
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)    
+    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='+')
+    objects = MessageManager()
     
     def __str__(self) -> str:
         return self.content
