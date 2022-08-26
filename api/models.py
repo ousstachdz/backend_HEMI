@@ -47,7 +47,7 @@ class Image(models.Model):
     is_profile = models.BooleanField(default=False)
     is_cover = models.BooleanField(default=True)
     is_post = models.BooleanField(default=False)
-    owner = models.ForeignKey(UserApp, on_delete=models.CASCADE)
+    owner = models.ForeignKey(UserApp, on_delete=models.CASCADE, related_name='+')
     post = models.ForeignKey(Post, on_delete=models.CASCADE,null=True, blank=True)
     cover_img = models.ImageField(upload_to='./static/images',null=True, blank=True)
 
@@ -59,15 +59,15 @@ class ConversationManager(models.Manager):
     
     def get_for(self, user_,user__):
         friend_ship = (
-            Q(Q(sender=user_)&Q(reciever=user__))|
-            Q(Q(reciever=user_)&Q(sender=user__))
+            Q(Q(reciever=user_)&Q(owner=user__))|
+            Q(Q(owner=user_)&Q(reciever=user__))
             )
         return super().get_queryset().filter(friend_ship) 
 
 
 class Conversation(models.Model):
+    owner = models.ForeignKey(UserApp, on_delete=models.CASCADE, )
     reciever = models.ForeignKey(UserApp, on_delete=models.CASCADE, related_name='reciever')
-    sender = models.ForeignKey(UserApp, on_delete=models.CASCADE, related_name='sender')
     objects= ConversationManager()
     
     
@@ -75,13 +75,14 @@ class MessageManager(models.Manager):
     
     def get_for(self, user_,user__):
         friend_ship = (
-            Q(Q(conversation__sender=user_)&Q(conversation__reciever=user__))|
-            Q(Q(conversation__reciever=user_)&Q(conversation__sender=user__))
+            Q(Q(conversation__reciever=user_)&Q(conversation__owner=user__))|
+            Q(Q(conversation__owner=user_)&Q(conversation__reciever=user__))
             )
         return super().get_queryset().filter(friend_ship) 
     
     
 class Message(models.Model):
+    sender = models.ForeignKey(UserApp, on_delete=models.CASCADE, related_name='sender')
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)    
     conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='+')

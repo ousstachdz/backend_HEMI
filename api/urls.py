@@ -9,6 +9,7 @@ urlpatterns = [
     path('signup_step_one/', views.signup_step_one, name='signup_step_one' ),
     path('get_conversation/<str:pk>', views.get_conversation, name='get_conversation' ),
     path('set_online/', views.set_online, name='set_online' ),
+    path('get_messages/<str:pk>', views.get_messages, name='get_messages' ),
     
     path('post/<str:pk>', views.post, name='post' ),
     path('get_user/<str:pk>', views.get_user_by_id, name='get_user_by_id' ),

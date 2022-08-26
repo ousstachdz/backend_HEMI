@@ -1,3 +1,4 @@
+from email import message
 from rest_framework import serializers
 
 from .models import Conversation, FriendShip, Message, Post, UserApp
@@ -65,7 +66,7 @@ class PostSerializer(serializers.ModelSerializer):
 
 
 class ConversationSerializer(serializers.ModelSerializer):
-    sender = UserBasicInfoSerializer()
+    owner = UserBasicInfoSerializer()
     reciever = UserBasicInfoSerializer()
 
     class Meta:
@@ -73,19 +74,27 @@ class ConversationSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
-        sender_data = validated_data.pop('sender')
+        owner_data = validated_data.pop('owner')
         reciever_data = validated_data.pop('reciever')
-        sender = UserApp.objects.get(id = sender_data)
+        owner = UserApp.objects.get(id = owner_data)
         reciever = UserApp.objects.get(id = reciever_data)
         conversation = Conversation.objects.create(**validated_data)
         conversation.reciever = reciever
-        conversation.sender = sender
+        conversation.owner = owner
         return conversation
 
     
 class MessageSerializer(serializers.ModelSerializer):
     conversation = ConversationSerializer()
+    sender = UserBasicInfoSerializer()
 
     class Meta:
         model = Message
         fields = '__all__'
+
+    def create(self, validated_data):
+        sender_data = validated_data.pop('sender')
+        sender = UserApp.objects.get(id = sender_data)
+        message = Message.objects.get(**validated_data)
+        message.sender = sender
+        return message

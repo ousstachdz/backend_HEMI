@@ -129,12 +129,12 @@ def get_conversation(request,pk):
      if (len(conversation)<=0):
           reciever_ = UserApp.objects.get(id=reciever)
           sender_ = UserApp.objects.get(id=sender)
-          conversation = Conversation.objects.create()     
-          conversation.sender=sender_
-          conversation.reciever= reciever_
-          conversation.save()
+          conversation =[]
+          conversation.append(Conversation.objects.create(owner=sender_, reciever= reciever_ ))     
+
+          conversation[0].save()
           
-     serializer = ConversationSerializer(conversation[0],)
+     serializer = ConversationSerializer(conversation[0], )
 
      conversation_id= { 'conversation_id' : serializer.data['id']}
      context = {
@@ -144,4 +144,9 @@ def get_conversation(request,pk):
      }
      return Response(data=context , status=status.HTTP_200_OK)
 
-
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_messages(request, pk):
+     messages = Message.objects.get_for(user_=request.user.id,user__=pk)
+     serializer = MessageSerializer(messages, many=True)
+     return Response(data=serializer , status=status.HTTP_200_OK)
