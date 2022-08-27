@@ -16,6 +16,7 @@ from .serializers import (
 
 @api_view(['POST'])
 def signup_step_one(request):
+     print(request.data)
      password = request.data['password']
      confirm_password = request.data['confirm_password']
      if password == confirm_password:
@@ -149,4 +150,4 @@ def get_conversation(request,pk):
 def get_messages(request, pk):
      messages = Message.objects.get_for(user_=request.user.id,user__=pk)
      serializer = MessageSerializer(messages, many=True)
-     return Response(data=serializer , status=status.HTTP_200_OK)
+     return Response(data=serializer.data , status=status.HTTP_200_OK)
