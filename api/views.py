@@ -151,3 +151,15 @@ def get_messages(request, pk):
      messages = Message.objects.get_for(user_=request.user.id,user__=pk)
      serializer = MessageSerializer(messages, many=True)
      return Response(data=serializer.data , status=status.HTTP_200_OK)
+
+
+@api_view(['post'])
+@permission_classes([IsAuthenticated])
+def complet_setup_first_step(request):
+     user = UserApp.objects.get(id=request.user.id)
+     if(request.data['birthdate']):
+          user.birthdate= request.data['birthdate']
+     user.address= request.data['address']
+     user.complete_setup += 33
+     user.save()
+     return Response(data={},status=status.HTTP_200_OK)

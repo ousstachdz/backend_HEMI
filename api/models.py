@@ -3,6 +3,9 @@ from django.db.models import Q
 from django.contrib.auth.models import AbstractUser
 
 class UserApp(AbstractUser):
+    complete_setup = models.PositiveIntegerField(default=33)
+    address = models.CharField(null=True,blank=True, max_length=255)
+    birthdate = models.DateField(null=True,blank=True)
     bio = models.TextField(default='hello world')
     profile_img = models.ImageField(upload_to='./static/profile',null=True, blank=True)
     cover_img = models.ImageField(upload_to='./static/cover',null=True, blank=True)
@@ -32,7 +35,7 @@ class FriendShip(models.Model):
 class Post(models.Model):
     owner = models.ForeignKey(UserApp, on_delete=models.CASCADE, related_name='owner')
     content = models.TextField(blank=True)
-    timestamp = models.DateField(auto_now_add=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
     public = models.BooleanField(default=False)
     only_friends = models.BooleanField(default=True)
     private = models.BooleanField(default=False)
