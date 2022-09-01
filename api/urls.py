@@ -11,6 +11,7 @@ urlpatterns = [
     path('set_online/', views.set_online, name='set_online' ),
     path('get_messages/<str:pk>', views.get_messages, name='get_messages' ),
     path('complet_setup/', views.complet_setup_first_step, name='complet_setup_first_step' ),
+    path('complet_setup_images/', views.complet_setup, name='complet_setup' ),
     
     path('post/<str:pk>', views.post, name='post' ),
     path('get_user/<str:pk>', views.get_user_by_id, name='get_user_by_id' ),
