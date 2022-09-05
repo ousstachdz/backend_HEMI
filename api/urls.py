@@ -12,6 +12,8 @@ urlpatterns = [
     path('get_messages/<str:pk>', views.get_messages, name='get_messages' ),
     path('complet_setup/', views.complet_setup_first_step, name='complet_setup_first_step' ),
     path('complet_setup_images/', views.complet_setup, name='complet_setup' ),
+    path('search_for_user/', views.search_for_user, name='search_for_user' ),
+    path('follow_unfollow_handler/', views.follow_unfollow_handler, name='follow_unfollow_handler' ),
     
     path('post/<str:pk>', views.post, name='post' ),
     path('get_user/<str:pk>', views.get_user_by_id, name='get_user_by_id' ),

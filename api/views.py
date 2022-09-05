@@ -1,16 +1,20 @@
-from asyncio.windows_events import NULL
-from copyreg import constructor
 import math
+import base64
+
 from rest_framework.response import Response 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination 
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.db.models import Q
+from django.core.files.base import ContentFile
+
 
 from .models import  Conversation, FriendShip, Message, Post, UserApp
 from .serializers import ( 
-               ConversationSerializer, MessageSerializer, PostSerializer, UserBasicInfoSerializer, 
+               ConversationSerializer, MessageSerializer, 
+               PostSerializer, UserBasicInfoSerializer, 
                UserCreatSerializer, UserSerializer
                     )
 
@@ -54,6 +58,8 @@ def get_friend_list(request, pk):
                FriendShip.objects.all().filter(sender=pk) |
                FriendShip.objects.all().filter(reciever=pk)
           )
+     if len(friend_ships_list)==0:
+          return Response( data={'message':'no result'}, status= status.HTTP_404_NOT_FOUND)
      friend_list = []
      for friend_ship in friend_ships_list :
           if str(friend_ship.sender.id) == pk:
@@ -133,18 +139,16 @@ def get_conversation(request,pk):
           sender_ = UserApp.objects.get(id=sender)
           conversation =[]
           conversation.append(Conversation.objects.create(owner=sender_, reciever= reciever_ ))     
-
           conversation[0].save()
           
      serializer = ConversationSerializer(conversation[0], )
-
      conversation_id= { 'conversation_id' : serializer.data['id']}
      context = {
           **conversation_id,
           'sender_id' : sender,
-          
      }
      return Response(data=context , status=status.HTTP_200_OK)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -158,7 +162,7 @@ def get_messages(request, pk):
 @permission_classes([IsAuthenticated])
 def complet_setup_first_step(request):
      user = UserApp.objects.get(id=request.user.id)
-     if(request.data['birthdate']):
+     if not request.data['birthdate'] is None and len(request.data['birthdate'])>=6 :
           user.birthdate= request.data['birthdate']
      user.address= request.data['address']
      user.complete_setup += 33
@@ -170,8 +174,6 @@ def complet_setup_first_step(request):
 @permission_classes([IsAuthenticated])
 def complet_setup(request):
      user = UserApp.objects.get(id=request.user.id)
-     # print(request.data)
-     # print(request.files)
      user.bio= request.data['bio']
      user.profile_img= base64_file(request.data['profile_img'],'profile')
      user.cover_img = base64_file(request.data['cover_img'],'cover')
@@ -179,13 +181,35 @@ def complet_setup(request):
      user.save()
      return Response(data={},status=status.HTTP_200_OK)
 
-import base64
-from django.core.files.base import ContentFile
-
 
 def base64_file(data, name=None):
     _format, _img_str = data.split(';base64,')
     _name, ext = _format.split('/')
-    if not name:
-        name = _name.split(":")[-1]
-    return ContentFile(base64.b64decode(_img_str), name='{}.{}'.format(name, ext))
+    image_types= '.tif, .tiff .bmp .jpg, .jpeg .gif .png .eps'
+    if image_types != None and ext in image_types:
+     if not name:
+          name = _name.split(":")[-1]
+     return ContentFile(base64.b64decode(_img_str), name='{}.{}'.format(name, ext))
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def search_for_user(request):
+     key_word = request.data['key_word']
+     user = (
+            Q(first_name__contains=key_word)|
+            Q(last_name__contains=key_word)|
+            Q(email__contains=key_word)
+            )
+     user_list = UserApp.objects.filter(user)
+     serialzer = UserBasicInfoSerializer(user_list, many = True)
+     return Response(data=serialzer.data, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def follow_unfollow_handler(request):
+     
+     reciever = UserApp.objects.get(id=request.data['reciever_id'])
+     sender = UserApp.objects.get(id=request.user.id)
+     print(reciever)
+     print(sender)
+     return Response(data={'msg':'done'},status=status.HTTP_200_OK)

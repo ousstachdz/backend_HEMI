@@ -31,7 +31,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'last_login', 'username',
             'first_name', 'last_name', 'email',
-            'date_joined', 'bio','profile_img','cover_img'
+            'date_joined', 'bio','profile_img','cover_img','complete_setup'
             ]  
           
 class UserBasicInfoSerializer(serializers.ModelSerializer):
@@ -41,6 +41,7 @@ class UserBasicInfoSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'first_name',
             'last_name', 'profile_img',
+            'bio','address'
             ]  
         
         

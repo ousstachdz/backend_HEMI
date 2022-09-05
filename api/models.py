@@ -2,6 +2,8 @@ from django.db import models
 from django.db.models import Q
 from django.contrib.auth.models import AbstractUser
 
+
+
 class UserApp(AbstractUser):
     complete_setup = models.PositiveIntegerField(default=33)
     address = models.CharField(null=True,blank=True, max_length=255)
@@ -9,6 +11,7 @@ class UserApp(AbstractUser):
     bio = models.TextField(default='hello world')
     profile_img = models.ImageField(upload_to='./static/profile',null=True, blank=True)
     cover_img = models.ImageField(upload_to='./static/cover',null=True, blank=True)
+
 
 
 class FriendShipManager(models.Manager):
