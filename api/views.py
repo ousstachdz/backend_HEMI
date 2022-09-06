@@ -15,7 +15,7 @@ from .models import  Conversation, FriendShip, Message, Post, UserApp
 from .serializers import ( 
                ConversationSerializer, MessageSerializer, 
                PostSerializer, UserBasicInfoSerializer, 
-               UserCreatSerializer, UserSerializer
+               UserCreatSerializer, UserSearchSerializer, UserSerializer
                     )
 
 
@@ -194,14 +194,15 @@ def base64_file(data, name=None):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def search_for_user(request):
+     user_id= request.user.id
      key_word = request.data['key_word']
-     user = (
+     query = (
             Q(first_name__contains=key_word)|
             Q(last_name__contains=key_word)|
             Q(email__contains=key_word)
             )
-     user_list = UserApp.objects.filter(user)
-     serialzer = UserBasicInfoSerializer(user_list, many = True)
+     user_list = UserApp.objects.filter(query)
+     serialzer = UserSearchSerializer(user_list, many = True, context={'user_id':user_id})
      return Response(data=serialzer.data, status=status.HTTP_200_OK)
 
 @api_view(['POST'])

@@ -1,3 +1,4 @@
+from dataclasses import field
 from email import message
 from rest_framework import serializers
 
@@ -50,6 +51,29 @@ class FriendShipSerializer(serializers.ModelSerializer):
     class Meta:
         model = FriendShip
         fields = '__all__'
+       
+class UserSearchSerializer (serializers.ModelSerializer):
+    
+    is_friend = serializers.SerializerMethodField('_check_relation')
+    
+    def _check_relation(self, user_obj ):
+        user_ = UserApp.objects.get(id=self.context['user_id']) 
+        user__ = UserApp.objects.get(id=user_obj.id) 
+        relation = FriendShip.objects.get_for(user_,user__)
+        
+        if len(relation)>0:
+            return True 
+        else: 
+            return False
+
+    
+    class Meta:
+        model = UserApp
+        fields = [
+            'id', 'first_name',
+            'last_name', 'profile_img',
+            'bio','address','is_friend'
+            ]  
         
 class PostSerializer(serializers.ModelSerializer):
     owner = UserBasicInfoSerializer()

@@ -57,6 +57,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
 class NotificationConsumer(AsyncWebsocketConsumer):
    
     def connect(self):
+        chat_room = f'notif__'
+        self.chat_room =chat_room
+        self.channel_layer.group_add(
+            chat_room,
+            self.channel_name
+        )
         return super().connect()
     
     async def disconnect(self, code):
@@ -65,15 +71,15 @@ class NotificationConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
         
+        notif = await self.send_notif(text_data_json)
         id = text_data_json['reciever_id']
-        chat_room = f'notif__{id}'
+        chat_room = f'notif__'
         self.chat_room =chat_room
         await self.channel_layer.group_add(
             chat_room,
             self.channel_name
         )
         
-        notif = await self.send_notif(text_data_json)
         if(notif):
             await self.channel_layer.group_send(
                 self.chat_room,
