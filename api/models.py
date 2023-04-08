@@ -11,6 +11,8 @@ class UserApp(AbstractUser):
     bio = models.TextField(default='hello world')
     profile_img = models.ImageField(upload_to='./static/profile',null=True, blank=True)
     cover_img = models.ImageField(upload_to='./static/cover',null=True, blank=True)
+    # simpleUser Achteur, Vendeur, Michanicien, VIP. 
+    role =  models.CharField(null=True,blank=True, max_length=255)
 
 
 
